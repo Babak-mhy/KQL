@@ -1,0 +1,17 @@
+AuditLogs
+| where TimeGenerated >= ago(30d)  // Adjust the timeframe as needed
+| where tostring(TargetResources) contains "UserName" or tostring(InitiatedBy) contains "UserName"
+| project TimeGenerated, OperationName, ResultDescription, Result, ResourceId, Category, Identity, TargetResources, ActivityDisplayName, AADOperationType, Type
+| union (
+    SigninLogs
+    | where TimeGenerated >= ago(30d)
+    | where UserPrincipalName contains "UserName"
+    | project TimeGenerated, UserPrincipalName, AppDisplayName, ResultDescription
+)
+| union (
+    SecurityEvent
+    | where TimeGenerated >= ago(30d)
+    | where AccountName contains "UserName"
+    | project TimeGenerated, AccountName, EventID, Computer
+)
+| sort by TimeGenerated desc
